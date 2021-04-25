@@ -1,2 +1,248 @@
-<h1>Simplified Present Cryptography</h1>
-<h1>Testing</h1>
+<!doctype html>
+<html lang="en">
+<head>
+<title>Simplified PRESENT Encoder</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+	<label for="16-bit plaintext">16-bit plaintext</label><br />
+	<input type="text" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
+	<br />
+	<label for="20-bit key">20-bit key</label><br />
+	<input type="text" id="key" name="key" maxlength="20" value="10110001110111110101">
+	<br />
+	<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
+<div>
+	<table id="t_sbox" style="width:20%">
+    <th>SBox</th>
+	<tr>
+    	<td>Input</td>
+        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+        <td>8</td><td>9</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td>
+	</tr>
+	<tr>
+    	<td>Output</td>
+        <td>C</td><td>5</td><td>6</td><td>B</td><td>9</td><td>0</td><td>A</td><td>D</td>
+        <td>3</td><td>E</td><td>F</td><td>8</td><td>4</td><td>7</td><td>1</td><td>2</td>
+	</tr>
+	</table>
+	<br />
+	<table id="t_permutation" style="width:25%">
+    <th>Permutation</th>
+	<tr>
+    	<td>Input bit position</td>
+        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+        <td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
+	</tr>
+	<tr>
+    	<td>Output bit position</td>
+        <td>0</td><td>4</td><td>8</td><td>12</td><td>1</td><td>5</td><td>9</td><td>13</td>
+        <td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
+	</tr>
+	</table>
+</div>
+<div id="div1">
+</div>
+<script>
+	function generateKey() {
+		var pt = document.getElementById("plaintext").value;
+		var k = document.getElementById("key").value;
+		
+		if (pt.length != 16) {
+			return alert("Invalid plaintext length 16 bits required!");
+		}
+
+		if (k.length != 20) {
+			return alert("Invalid key length 20 bits required!");
+		}
+
+		if (!(/^([10]{16,})$/.test(pt))) {
+			return alert("Invalid plaintext please only use 1s and 0s!");
+		}
+		
+		if (!(/^([10]{20,})$/.test(k))) {
+			return alert("Invalid key please only use 1s and 0s!");
+		}
+
+		if (document.contains(document.getElementById("divKey"))) {
+			document.getElementById("divKey").remove();
+		}
+
+
+		var divKey = document.createElement("div");
+		divKey.setAttribute("id", "divKey");
+
+
+		var k1 = keygen(divKey, k, "0001");
+		
+		divKey.appendChild(document.createTextNode("Key 1 is: " + k1));
+		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(document.createTextNode("First 16 bits Key 1 is: " + k1.substring(0, 16)));
+		divKey.appendChild(document.createElement("br"));
+
+		var element = document.getElementById("div1");
+		element.appendChild(divKey);
+
+	}
+	
+	function keygen(divKey, k, round) {
+	
+			//TODO
+		//print user supplied key
+		divKey.appendChild(document.createTextNode("User-supplied key: " + k));
+		divKey.appendChild(document.createElement("br"));
+		
+		//create table 
+		//row 1 user supplied key
+		divKey.appendChild(document.createTextNode(k.match(/.{1,4}/g)));
+		divKey.appendChild(document.createElement("br"));
+		
+		//row 2 user supplied key rotated left 17 bits
+		var r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
+		divKey.appendChild(document.createTextNode(r2.match(/.{1,4}/g)));
+		divKey.appendChild(document.createElement("br"));
+		
+		//row 3 substitue nibble on the left using the s-box
+		var leftNibble = parseInt(r2.substring(0,4),2);
+		var r3;
+		
+		switch (leftNibble) {
+			case 0:
+				r3 = "1100"; break;
+			case 1:
+				r3 = "0101"; break;
+			case 2:
+				r3 = "0110"; break;
+			case 3:
+				r3 = "1011"; break;
+			case 4:
+				r3 = "1001"; break;
+			case 5:
+				r3 = "0000"; break;
+			case 6:
+				r3 = "1010"; break;
+			case 7:
+				r3 = "1101"; break;
+			case 8:
+				r3 = "0011"; break;
+			case 9:
+				r3 = "1110"; break;
+			case 10:
+				r3 = "1111"; break;
+			case 11:
+				r3 = "1000"; break;
+			case 12:
+				r3 = "0100"; break;
+			case 13:
+				r3 = "0111"; break;
+			case 14:
+				r3 = "0001"; break;
+			case 15:
+				r3 = "0010"; break;
+		}
+		
+		r3 = r3 + r2.substring(4, r2.length);
+		divKey.appendChild(document.createTextNode(r3.match(/.{1,4}/g)));
+		divKey.appendChild(document.createElement("br"));
+		
+		//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
+		var r4 = r3.substring(0,12);
+		
+		var nibble4 = r3.substring(12,16);
+		
+		for (i = 0; i < nibble4.length; i++) {
+			if (nibble4[i] != round[i]) {
+				r4 = r4 + 1;
+			} else {			
+				r4 = r4 + 0;
+			}
+		}		
+		
+		r4 = r4 + r3.substring(16, r3.length);
+		
+		divKey.appendChild(document.createTextNode(r4.match(/.{1,4}/g)));
+		divKey.appendChild(document.createElement("br"));
+		
+		//16 bits on the left for the round key
+		return r4;
+	}
+	/*
+	function generateLFSR() {
+		//get input values
+		var t1 = document.getElementById("tap1").value;
+		var t2 = document.getElementById("tap2").value;
+		var t3 = document.getElementById("tap3").value;
+		var t4 = document.getElementById("tap4").value;
+		var s1 = document.getElementById("seed1").value;
+		var s2 = document.getElementById("seed2").value;
+		var s3 = document.getElementById("seed3").value;
+		var s4 = document.getElementById("seed4").value;
+		var keystream = "Keystream = ";
+		
+		//check for blank inputs
+		if (s1 == "" || s2 == "" || s3 == "" || s4 == ""
+		|| t1 == "" || t2 == "" || t3 == "" || t4 == "") {
+			return;
+		}
+		//check for valid inputs
+		if ((t1 == 1 || t1 == 0) 
+		&& (t2 == 1 || t2 == 0)
+		&& (t3 == 1 || t3 == 0)
+		&& (t4 == 1 || t4 == 0)
+		&& (s1 == 1 || s1 == 0) 
+		&& (s2 == 1 || s2 == 0)
+		&& (s3 == 1 || s3 == 0)
+		&& (s4 == 1 || s4 == 0)) {	
+			var key = s1+s2+s3+s4;
+	
+			//create LFSR keystream table
+			var table = document.getElementById("LFSRtable");
+			
+			//clear table
+			table.innerHTML = "";
+			
+			var i = 0;
+			
+			do {
+				//create row
+				var row = table.insertRow(i);
+				var cell1 = row.insertCell(0);
+				var cell2 = row.insertCell(1);
+				var cell3 = row.insertCell(2);
+				var cell4 = row.insertCell(3);
+				cell1.innerHTML = s1;
+				cell2.innerHTML = s2;
+				cell3.innerHTML = s3;
+				cell4.innerHTML = s4;
+				//add last cell to keystream
+				keystream += s4;
+
+			////needs to be changed to work with tap
+				//add xor to keystream
+				if (cell1.innerHTML == cell4.innerHTML) {
+					s4=s3;
+					s3=s2;
+					s2=s1;
+					s1="0";
+					
+				} else {
+					s4=s3;
+					s3=s2;
+					s2=s1;
+					s1="1";
+				}
+				
+				i++;
+			} while ((i < 50) && (key != s1+s2+s3+s4))
+					
+			//set keystream text
+			var stream = document.getElementById("keystream");
+			//clear stream
+			stream.innerHTML = "";
+			stream.appendChild(document.createTextNode(keystream));
+		}
+	}
+	*/
+</script>
+</body>
+</html>
