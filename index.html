@@ -3,47 +3,78 @@
 <head>
 <title>Simplified PRESENT Encoder</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 </head>
 <body>
-	<label for="16-bit plaintext">16-bit plaintext</label><br />
-	<input type="text" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
-	<br />
-	<label for="20-bit key">20-bit key</label><br />
-	<input type="text" id="key" name="key" maxlength="20" value="10110001110111110101">
-	<br />
-	<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
-	<button type ="button" value="Clear" onclick="reset()">Reset All</button>
-<div>
-	<table id="t_sbox" style="width:20%">
-    <th>SBox</th>
-	<tr>
-    	<td>Input</td>
-        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
-        <td>8</td><td>9</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td>
-	</tr>
-	<tr>
-    	<td>Output</td>
-        <td>C</td><td>5</td><td>6</td><td>B</td><td>9</td><td>0</td><td>A</td><td>D</td>
-        <td>3</td><td>E</td><td>F</td><td>8</td><td>4</td><td>7</td><td>1</td><td>2</td>
-	</tr>
-	</table>
-	<br />
-	<table id="t_permutation" style="width:25%">
-    <th>Permutation</th>
-	<tr>
-    	<td>Input bit position</td>
-        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
-        <td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
-	</tr>
-	<tr>
-    	<td>Output bit position</td>
-        <td>0</td><td>4</td><td>8</td><td>12</td><td>1</td><td>5</td><td>9</td><td>13</td>
-        <td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
-	</tr>
-	</table>
+<nav class="navbar navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">Simplified PRESENT Encoder</a>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-4 order-md-2 mb-4" id="sidebar">
+			<h2 id="example">Get Started</h2>
+			<div class="bd-example">
+				<div class="form-floating mb-3">
+					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
+					<label for="plaintext">16-bit plaintext</label>
+				</div>
+				<div class="form-floating mb-3">
+					<input type="text" class="form-control" id="key" name="key" maxlength="20" value="10110001110111110101">
+					<label for="key">20-bit key</label>
+				</div>
+				<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
+				<button type ="button" value="Clear" onclick="reset()">Reset All</button>
+			</div>
+				<div>
+					<table id="t_sbox" class="table table-striped">
+					<th>SBox</th>
+					<tr>
+						<td>Input</td>
+						<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+						<td>8</td><td>9</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td>
+					</tr>
+					<tr>
+						<td>Output</td>
+						<td>C</td><td>5</td><td>6</td><td>B</td><td>9</td><td>0</td><td>A</td><td>D</td>
+						<td>3</td><td>E</td><td>F</td><td>8</td><td>4</td><td>7</td><td>1</td><td>2</td>
+					</tr>
+					</table>
+					<br />
+					<table id="t_permutation" class="table table-striped">
+					<th>Permutation</th>
+					<tr>
+						<td>Input bit</td>
+						<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+						<td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
+					</tr>
+					<tr>
+						<td>Output bit</td>
+						<td>0</td><td>4</td><td>8</td><td>12</td><td>1</td><td>5</td><td>9</td><td>13</td>
+						<td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
+					</tr>
+					</table>
+				</div>
+		</div>
+		<main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content">
+			<div class="container">
+				<div class="row">
+					<div class="col">
+						<h2>Keystream</h2>
+						<div id="div1">
+						</div>
+					</div>
+					<div class="col">
+						<h2>Encipher Steps</h2>
+						<div id="div2">
+						</div>
+					</div>
+				</div>
+			  </div>
+		</main>
+	</div>
 </div>
-<div id="div1">
-</div>
+
 <script>
 	var key1;
 	var key2;
@@ -78,6 +109,12 @@
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
 		}
+		if (document.contains(document.getElementById("btnEncrypt"))) {
+			document.getElementById("btnEncrypt").remove();
+		}
+		if (document.contains(document.getElementById("divEncrypt"))) {
+			document.getElementById("divEncrypt").remove()
+		}
 
 
 		var divKey = document.createElement("div");
@@ -105,11 +142,11 @@
 		divKey.appendChild(document.createTextNode("First 16 bits Key 3 is: " + key3));
 		divKey.appendChild(document.createElement("br"));
 
-		
 		var e = document.createElement("BUTTON");
 		e.appendChild(document.createTextNode("Encrypt"));
+		e.setAttribute("id", "btnEncrypt");
 		e.onclick = function() {encrypt()};
-		divKey.appendChild(e);
+		document.getElementById("sidebar").appendChild(e);
 		
 		var element = document.getElementById("div1");
 		element.appendChild(divKey);
@@ -117,8 +154,6 @@
 	}
 	
 	function keygen(divKey, k, round) {
-		divKey.appendChild(document.createElement("br"));
-	
 		//print user supplied key
 		divKey.appendChild(document.createTextNode("Key: " + k));
 		divKey.appendChild(document.createElement("br"));
@@ -159,7 +194,7 @@
 		
 		var divEncrypt = document.createElement("div");
 		divEncrypt.setAttribute("id", "divEncrypt");
-		document.getElementById("divKey").appendChild(divEncrypt);
+		document.getElementById("div2").appendChild(divEncrypt);
 		divEncrypt.appendChild(document.createElement("br"));
 		
 		//print plaintext and break
@@ -301,10 +336,16 @@
 	}
 	
 	function reset() {
-		document.getElementById("plaintext").value = "";
-		document.getElementById("key").value = "";
+		//document.getElementById("plaintext").value = "";
+		//document.getElementById("key").value = "";
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
+		}
+		if (document.contains(document.getElementById("divEncrypt"))) {
+			document.getElementById("divEncrypt").remove();
+		}
+		if (document.contains(document.getElementById("btnEncrypt"))) {
+			document.getElementById("btnEncrypt").remove();
 		}
 	}
 </script>
