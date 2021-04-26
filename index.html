@@ -12,6 +12,7 @@
 	<input type="text" id="key" name="key" maxlength="20" value="10110001110111110101">
 	<br />
 	<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
+	<button type ="button" value="Clear" onclick="reset()">Reset All</button>
 <div>
 	<table id="t_sbox" style="width:20%">
     <th>SBox</th>
@@ -44,8 +45,18 @@
 <div id="div1">
 </div>
 <script>
+	var key1;
+	var key2;
+	var key3;
+	
+	var round1;
+	var round2;
+	var round3;
+	
+	var rowRegex = /.{1,4}/g;
+	var pt = document.getElementById("plaintext").value;
+	
 	function generateKey() {
-		var pt = document.getElementById("plaintext").value;
 		var k = document.getElementById("key").value;
 		
 		if (pt.length != 16) {
@@ -74,175 +85,228 @@
 
 
 		var k1 = keygen(divKey, k, "0001");
-		
+		key1 = k1.substring(0, 16)
 		divKey.appendChild(document.createTextNode("Key 1 is: " + k1));
 		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createTextNode("First 16 bits Key 1 is: " + k1.substring(0, 16)));
+		divKey.appendChild(document.createTextNode("First 16 bits Key 1 is: " + key1));
+		divKey.appendChild(document.createElement("br"));
+		
+		var k2 = keygen(divKey, k1, "0010");
+		key2 = k2.substring(0, 16);
+		divKey.appendChild(document.createTextNode("Key 2 is: " + k2));
+		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(document.createTextNode("First 16 bits Key 2 is: " + key2));
+		divKey.appendChild(document.createElement("br"));
+		
+		var k3 = keygen(divKey, k2, "0011");
+		key3 = k3.substring(0, 16);
+		divKey.appendChild(document.createTextNode("Key 3 is: " + k3));
+		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(document.createTextNode("First 16 bits Key 3 is: " + key3));
 		divKey.appendChild(document.createElement("br"));
 
+		
+		var e = document.createElement("BUTTON");
+		e.appendChild(document.createTextNode("Encrypt"));
+		e.onclick = function() {encrypt()};
+		divKey.appendChild(e);
+		
 		var element = document.getElementById("div1");
 		element.appendChild(divKey);
 
 	}
 	
 	function keygen(divKey, k, round) {
-	
-			//TODO
-		//print user supplied key
-		divKey.appendChild(document.createTextNode("User-supplied key: " + k));
 		divKey.appendChild(document.createElement("br"));
-		
+	
+		//print user supplied key
+		divKey.appendChild(document.createTextNode("Key: " + k));
+		divKey.appendChild(document.createElement("br"));
+
 		//create table 
 		//row 1 user supplied key
-		divKey.appendChild(document.createTextNode(k.match(/.{1,4}/g)));
+		printRow(divKey, k.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 2 user supplied key rotated left 17 bits
 		var r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
-		divKey.appendChild(document.createTextNode(r2.match(/.{1,4}/g)));
+		printRow(divKey, r2.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 3 substitue nibble on the left using the s-box
 		var leftNibble = parseInt(r2.substring(0,4),2);
-		var r3;
-		
-		switch (leftNibble) {
-			case 0:
-				r3 = "1100"; break;
-			case 1:
-				r3 = "0101"; break;
-			case 2:
-				r3 = "0110"; break;
-			case 3:
-				r3 = "1011"; break;
-			case 4:
-				r3 = "1001"; break;
-			case 5:
-				r3 = "0000"; break;
-			case 6:
-				r3 = "1010"; break;
-			case 7:
-				r3 = "1101"; break;
-			case 8:
-				r3 = "0011"; break;
-			case 9:
-				r3 = "1110"; break;
-			case 10:
-				r3 = "1111"; break;
-			case 11:
-				r3 = "1000"; break;
-			case 12:
-				r3 = "0100"; break;
-			case 13:
-				r3 = "0111"; break;
-			case 14:
-				r3 = "0001"; break;
-			case 15:
-				r3 = "0010"; break;
-		}
-		
-		r3 = r3 + r2.substring(4, r2.length);
-		divKey.appendChild(document.createTextNode(r3.match(/.{1,4}/g)));
+		var r3 = _sbox(leftNibble);
+		r3 += r2.substring(4, r2.length);
+		printRow(divKey, r3.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
 		var r4 = r3.substring(0,12);
-		
 		var nibble4 = r3.substring(12,16);
-		
-		for (i = 0; i < nibble4.length; i++) {
-			if (nibble4[i] != round[i]) {
-				r4 = r4 + 1;
-			} else {			
-				r4 = r4 + 0;
-			}
-		}		
-		
-		r4 = r4 + r3.substring(16, r3.length);
-		
-		divKey.appendChild(document.createTextNode(r4.match(/.{1,4}/g)));
+		r4 += _xor(nibble4,round);
+		r4 += r3.substring(16, r3.length);
+		printRow(divKey, r4.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//16 bits on the left for the round key
 		return r4;
 	}
-	/*
-	function generateLFSR() {
-		//get input values
-		var t1 = document.getElementById("tap1").value;
-		var t2 = document.getElementById("tap2").value;
-		var t3 = document.getElementById("tap3").value;
-		var t4 = document.getElementById("tap4").value;
-		var s1 = document.getElementById("seed1").value;
-		var s2 = document.getElementById("seed2").value;
-		var s3 = document.getElementById("seed3").value;
-		var s4 = document.getElementById("seed4").value;
-		var keystream = "Keystream = ";
-		
-		//check for blank inputs
-		if (s1 == "" || s2 == "" || s3 == "" || s4 == ""
-		|| t1 == "" || t2 == "" || t3 == "" || t4 == "") {
-			return;
-		}
-		//check for valid inputs
-		if ((t1 == 1 || t1 == 0) 
-		&& (t2 == 1 || t2 == 0)
-		&& (t3 == 1 || t3 == 0)
-		&& (t4 == 1 || t4 == 0)
-		&& (s1 == 1 || s1 == 0) 
-		&& (s2 == 1 || s2 == 0)
-		&& (s3 == 1 || s3 == 0)
-		&& (s4 == 1 || s4 == 0)) {	
-			var key = s1+s2+s3+s4;
 	
-			//create LFSR keystream table
-			var table = document.getElementById("LFSRtable");
-			
-			//clear table
-			table.innerHTML = "";
-			
-			var i = 0;
-			
-			do {
-				//create row
-				var row = table.insertRow(i);
-				var cell1 = row.insertCell(0);
-				var cell2 = row.insertCell(1);
-				var cell3 = row.insertCell(2);
-				var cell4 = row.insertCell(3);
-				cell1.innerHTML = s1;
-				cell2.innerHTML = s2;
-				cell3.innerHTML = s3;
-				cell4.innerHTML = s4;
-				//add last cell to keystream
-				keystream += s4;
-
-			////needs to be changed to work with tap
-				//add xor to keystream
-				if (cell1.innerHTML == cell4.innerHTML) {
-					s4=s3;
-					s3=s2;
-					s2=s1;
-					s1="0";
-					
-				} else {
-					s4=s3;
-					s3=s2;
-					s2=s1;
-					s1="1";
-				}
-				
-				i++;
-			} while ((i < 50) && (key != s1+s2+s3+s4))
-					
-			//set keystream text
-			var stream = document.getElementById("keystream");
-			//clear stream
-			stream.innerHTML = "";
-			stream.appendChild(document.createTextNode(keystream));
+	function encrypt() {		
+		if (document.contains(document.getElementById("divEncrypt"))) {
+			document.getElementById("divEncrypt").remove();
+		}
+		
+		var divEncrypt = document.createElement("div");
+		divEncrypt.setAttribute("id", "divEncrypt");
+		document.getElementById("divKey").appendChild(divEncrypt);
+		divEncrypt.appendChild(document.createElement("br"));
+		
+		//print plaintext and break
+		divEncrypt.appendChild(document.createTextNode("Plaintext: " + pt));
+		divEncrypt.appendChild(document.createElement("br"));
+		
+		//generate table to store data
+		var tbl = document.createElement("table");
+		tbl.setAttribute("id","encryptTbl");
+		
+		var tblBody = document.createElement("tbody");
+		tblBody.setAttribute("id", "encryptTbl-body");
+		tbl.append(tblBody);
+		
+		divEncrypt.appendChild(tbl);
+		
+		//Round 1
+		//function for pretty print key1, generate next button
+		var row1 = document.createElement("tr");
+		row1.setAttribute("id", "row1");
+		printTblRow(row1, "16-bit plaintext", pt.match(rowRegex));
+		
+		var btnStep = document.createElement("BUTTON");
+		btnStep.appendChild(document.createTextNode("Step"));
+		btnStep.onclick = function() {printk1()};
+		var cell = document.createElement("td");
+		cell.append(btnStep);
+		row1.appendChild(cell);
+		
+		tblBody.append(row1);
+		
+		//pretty print k1, delete/generate next button		
+	}
+	
+	function printk1() {
+		//pretty print k1, delete/generate next button
+		console.log("Inside printk1");
+	}
+	//TODO: functions for encryption
+		//function for xor key1 with k1, pretty print result, delete/generate next button
+		
+		//function for sbox with result, pretty print result, delete/generate next button
+		
+		//function for permutate key against permutation, pretty print result, delete/generate next button, record round1 result
+		
+		//Round 2
+		//function for pretty print round1, delete/generate next button
+		
+		//pretty print k2, delete/generate next button
+		
+		//function for xor round1 with k2, pretty print result, delete/generate next button
+		
+		//function for sbox with result, pretty print result, delete/generate next button
+		
+		//function for permutate result, pretty print result, delete/generate next button, record round 2 result
+		
+		//Round 3
+		//function for pretty print round2, generate next button
+		
+		//pretty print k3, generate next button
+		
+		//function for xor key3 with round2, pretty print round3 result
+	
+	function printRow(e, a) {
+		var t = "";
+		a.forEach(a => {t += a + "\xa0\xa0\xa0\xa0\xa0"});
+		e.appendChild(document.createTextNode(t));
+	}
+	
+	function printTblRow(row, firstColumn, values) {
+		var first = document.createElement("td");
+		first.innerText = firstColumn;
+		row.append(first);
+		
+		for(i = 0; i < values.length; i++) {
+			var cell = document.createElement("td");
+			cell.innerText = values[i];
+			row.append(cell);
 		}
 	}
-	*/
+	
+	function _xor(x,y) {
+		var t = "";
+		for (i = 0; i < x.length; i++) {
+			if (x[i] != y[i]) {
+				t += 1;
+			} else {			
+				t += 0;
+			}
+		}
+		return t;
+	}
+	
+	function _sbox(nibble) {
+		var t = "";
+		switch (nibble) {
+			case 0:
+				return "1100";
+			case 1:
+				return "0101";
+			case 2:
+				return "0110";
+			case 3:
+				return "1011";
+			case 4:
+				return "1001";
+			case 5:
+				return "0000";
+			case 6:
+				return "1010";
+			case 7:
+				return "1101";
+			case 8:
+				return "0011";
+			case 9:
+				return "1110";
+			case 10:
+				return "1111";
+			case 11:
+				return "1000";
+			case 12:
+				return "0100";
+			case 13:
+				return "0111";
+			case 14:
+				return "0001";
+			case 15:
+				return "0010";
+		}
+	}
+	
+	function _permutation(x) {
+		var t = new Array[x.length];
+		var permutation = [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15];
+		for (i = 0; i < x.length; i++) {
+			t[permutation[i]] = x[i];
+		}
+		return t;
+	}
+	
+	function reset() {
+		document.getElementById("plaintext").value = "";
+		document.getElementById("key").value = "";
+		if (document.contains(document.getElementById("divKey"))) {
+			document.getElementById("divKey").remove();
+		}
+	}
 </script>
 </body>
 </html>
