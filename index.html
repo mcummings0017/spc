@@ -23,8 +23,11 @@
 					<input type="text" class="form-control" id="key" name="key" maxlength="20" value="10110001110111110101">
 					<label for="key">20-bit key</label>
 				</div>
-				<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
-				<button type ="button" value="Clear" onclick="reset()">Reset All</button>
+				<div>
+					<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
+					<button type ="button" value="Clear" onclick="reset()">Reset All</button>
+				</div>
+				<br />
 			</div>
 				<div>
 					<table id="t_sbox" class="table table-striped">
@@ -80,9 +83,9 @@
 	var key2;
 	var key3;
 	
-	var round1;
-	var round2;
-	var round3;
+	var round1 = ["","","",""];
+	var round2 = ["","","",""];
+	var round3 = ["","","",""];
 	
 	var rowRegex = /.{1,4}/g;
 	var pt = document.getElementById("plaintext").value;
@@ -127,6 +130,7 @@
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createTextNode("First 16 bits Key 1 is: " + key1));
 		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(document.createElement("br"));
 		
 		var k2 = keygen(divKey, k1, "0010");
 		key2 = k2.substring(0, 16);
@@ -134,12 +138,14 @@
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createTextNode("First 16 bits Key 2 is: " + key2));
 		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(document.createElement("br"));
 		
 		var k3 = keygen(divKey, k2, "0011");
 		key3 = k3.substring(0, 16);
 		divKey.appendChild(document.createTextNode("Key 3 is: " + k3));
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createTextNode("First 16 bits Key 3 is: " + key3));
+		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createElement("br"));
 
 		var e = document.createElement("BUTTON");
@@ -169,7 +175,7 @@
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 3 substitue nibble on the left using the s-box
-		var leftNibble = parseInt(r2.substring(0,4),2);
+		var leftNibble = r2.substring(0,4);
 		var r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
 		printRow(divKey, r3.match(rowRegex));
@@ -195,76 +201,185 @@
 		var divEncrypt = document.createElement("div");
 		divEncrypt.setAttribute("id", "divEncrypt");
 		document.getElementById("div2").appendChild(divEncrypt);
-		divEncrypt.appendChild(document.createElement("br"));
 		
 		//print plaintext and break
 		divEncrypt.appendChild(document.createTextNode("Plaintext: " + pt));
+		divEncrypt.appendChild(document.createElement("br"));
 		divEncrypt.appendChild(document.createElement("br"));
 		
 		//generate table to store data
 		var tbl = document.createElement("table");
 		tbl.setAttribute("id","encryptTbl");
-		
+		tbl.setAttribute("class","table table-sm table-striped table-dark");
 		var tblBody = document.createElement("tbody");
 		tblBody.setAttribute("id", "encryptTbl-body");
 		tbl.append(tblBody);
 		
 		divEncrypt.appendChild(tbl);
+
+		var row = document.createElement("tr");
+		row.setAttribute("id", "row_round1");
 		
-		//Round 1
-		//function for pretty print key1, generate next button
-		var row1 = document.createElement("tr");
-		row1.setAttribute("id", "row1");
-		printTblRow(row1, "16-bit plaintext", pt.match(rowRegex));
+		var first = document.createElement("td");
+		first.innerText = "Round 1";
+		row.append(first);
 		
-		var btnStep = document.createElement("BUTTON");
-		btnStep.appendChild(document.createTextNode("Step"));
-		btnStep.onclick = function() {printk1()};
-		var cell = document.createElement("td");
-		cell.append(btnStep);
-		row1.appendChild(cell);
+		document.getElementById("encryptTbl-body").append(row);
 		
-		tblBody.append(row1);
+		round1_Step1();
 		
-		//pretty print k1, delete/generate next button		
+		document.getElementById("btnEncrypt").disabled = true;
 	}
 	
-	function printk1() {
-		//pretty print k1, delete/generate next button
-		console.log("Inside printk1");
+	//Round 1
+	//function for pretty print plaintext, generate next button
+	function round1_Step1() {
+		printTblRow("round1_row1", "16-bit plaintext", pt.match(rowRegex), round1_Step2);
 	}
+	
+	//function for pretty print key1, delete/generate next button
+	function round1_Step2() {
+		printTblRow("round1_row2", "K1", key1.match(rowRegex), round1_Step3);
+	}
+	
 	//TODO: functions for encryption
-		//function for xor key1 with k1, pretty print result, delete/generate next button
+	//function for xor key1 with k1, pretty print result, delete/generate next button
+	function round1_Step3() {
+		var splitpt = pt.match(rowRegex);
+		var splitk1 = key1.match(rowRegex);
+		round1[0] = _xor(splitpt[0],splitk1[0]);
+		round1[1] = _xor(splitpt[1],splitk1[1]);
+		round1[2] = _xor(splitpt[2],splitk1[2]);
+		round1[3] = _xor(splitpt[3],splitk1[3]);
 		
-		//function for sbox with result, pretty print result, delete/generate next button
+		printTblRow("round1_row3", "xor", round1, round1_Step4);
+	}
+	
+	//function for sbox with result, pretty print result, delete/generate next button
+	function round1_Step4() {
+		round1[0] = _sbox(round1[0]);
+		round1[1] = _sbox(round1[1]);
+		round1[2] = _sbox(round1[2]);
+		round1[3] = _sbox(round1[3]);
 		
-		//function for permutate key against permutation, pretty print result, delete/generate next button, record round1 result
+		printTblRow("round1_row4", "sbox", round1, round1_Step5);
+	}
+	
+	//function for permutate key against permutation, pretty print result, delete/generate next button, record round1 result
+	function round1_Step5() {
+		var tmpRound1 = round1[0] + round1[1] + round1[2] + round1[3];
+		tmpRound1 = _permutation(tmpRound1);
+		round1 = tmpRound1.match(rowRegex);
+		round2 = round1;
+		printTblRow("round1_row5", "permutation", round1, round2_Step1);
+	}
+	
+	//Round 2
+	//function for pretty print round2, delete/generate next button
+	function round2_Step1() {
+		var row = document.createElement("tr");
+		row.setAttribute("id", "row_round2");
 		
-		//Round 2
-		//function for pretty print round1, delete/generate next button
+		var first = document.createElement("td");
+		first.innerText = "Round 2";
+		row.append(first);
 		
-		//pretty print k2, delete/generate next button
+		document.getElementById("encryptTbl-body").append(row);
 		
-		//function for xor round1 with k2, pretty print result, delete/generate next button
+		printTblRow("round2_row1", "16-bit plaintext", round2, round2_Step2);
+	}
+	
+	//pretty print k2, delete/generate next button
+	function round2_Step2() {
+		printTblRow("round2_row2", "K2", key2.match(rowRegex), round2_Step3);
+	}
+	
+	//function for xor round2 with k2, pretty print result, delete/generate next button
+	function round2_Step3() {
+		var splitk2 = key2.match(rowRegex);
+		round2[0] = _xor(round2[0],splitk2[0]);
+		round2[1] = _xor(round2[1],splitk2[1]);
+		round2[2] = _xor(round2[2],splitk2[2]);
+		round2[3] = _xor(round2[3],splitk2[3]);
 		
-		//function for sbox with result, pretty print result, delete/generate next button
+		printTblRow("round2_row3", "xor", round2, round2_Step4);
+	}
+	
+	//function for sbox with result, pretty print result, delete/generate next button
+	function round2_Step4() {
+		round2[0] = _sbox(round2[0]);
+		round2[1] = _sbox(round2[1]);
+		round2[2] = _sbox(round2[2]);
+		round2[3] = _sbox(round2[3]);
 		
-		//function for permutate result, pretty print result, delete/generate next button, record round 2 result
+		printTblRow("round2_row4", "sbox", round2, round2_Step5);
+	}
+	
+	//function for permutate result, pretty print result, delete/generate next button, record round 2 result
+	function round2_Step5() {
+		var tmpRound2 = round2[0] + round2[1] + round2[2] + round2[3];
+		tmpRound2 = _permutation(tmpRound2);
+		round2 = tmpRound2.match(rowRegex);
+		round3 = round2;
+		printTblRow("round2_row5", "permutation", round2, round3_Step1);
+	}
+	
+	//Round 3
+	//function for pretty print round2, generate next button
+	function round3_Step1() {
+		var row = document.createElement("tr");
+		row.setAttribute("id", "row_round3");
 		
-		//Round 3
-		//function for pretty print round2, generate next button
+		var first = document.createElement("td");
+		first.innerText = "Round 3";
+		row.append(first);
 		
-		//pretty print k3, generate next button
+		document.getElementById("encryptTbl-body").append(row);
 		
-		//function for xor key3 with round2, pretty print round3 result
+		printTblRow("round3_row1", "16-bit plaintext", round3, round3_Step2);
+	}
+	
+	//pretty print k3, generate next button
+	function round3_Step2() {
+		printTblRow("round3_row2", "K3", key3.match(rowRegex), round3_Step3);
+	}
+	
+	//function for xor key3 with round2, pretty print round3 result
+	function round3_Step3() {
+		var splitk3 = key3.match(rowRegex);
+		round3[0] = _xor(round3[0],splitk3[0]);
+		round3[1] = _xor(round3[1],splitk3[1]);
+		round3[2] = _xor(round3[2],splitk3[2]);
+		round3[3] = _xor(round3[3],splitk3[3]);
+		
+		printTblRow("round3_row3", "xor", round3, end);
+		
+		if (document.contains(document.getElementById("step"))) {
+			document.getElementById("step").remove()
+		}
+		
+		var divEncrypt = document.getElementById("divEncrypt");
+		divEncrypt.appendChild(document.createTextNode("Ciphertext: " + round3.join("")));
+	}
+	
+	function end() {
+	
+	}
 	
 	function printRow(e, a) {
 		var t = "";
 		a.forEach(a => {t += a + "\xa0\xa0\xa0\xa0\xa0"});
 		e.appendChild(document.createTextNode(t));
 	}
-	
-	function printTblRow(row, firstColumn, values) {
+
+	function printTblRow(row_attr, firstColumn, values, _func) {
+		if (document.contains(document.getElementById("step"))) {
+			document.getElementById("step").remove()
+		}
+		
+		var row = document.createElement("tr");
+		row.setAttribute("id", row_attr);
+		
 		var first = document.createElement("td");
 		first.innerText = firstColumn;
 		row.append(first);
@@ -274,6 +389,16 @@
 			cell.innerText = values[i];
 			row.append(cell);
 		}
+		
+		var btnStep = document.createElement("BUTTON");
+		btnStep.appendChild(document.createTextNode("Step"));
+		btnStep.setAttribute("id", "step");
+		btnStep.onclick = function() {_func()};
+		var cell = document.createElement("td");
+		cell.append(btnStep);
+		row.appendChild(cell);
+		
+		document.getElementById("encryptTbl-body").append(row);
 	}
 	
 	function _xor(x,y) {
@@ -289,8 +414,7 @@
 	}
 	
 	function _sbox(nibble) {
-		var t = "";
-		switch (nibble) {
+		switch (parseInt(nibble,2)) {
 			case 0:
 				return "1100";
 			case 1:
@@ -327,17 +451,26 @@
 	}
 	
 	function _permutation(x) {
-		var t = new Array[x.length];
+		var t = new Array(x.length);
 		var permutation = [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15];
 		for (i = 0; i < x.length; i++) {
 			t[permutation[i]] = x[i];
 		}
-		return t;
+		return t.join("");
 	}
 	
 	function reset() {
 		//document.getElementById("plaintext").value = "";
 		//document.getElementById("key").value = "";
+		
+		key1 = "";
+		key2 = "";
+		key3 = "";
+		
+		round1 = ["","","",""];
+		round2 = ["","","",""];
+		round3 = ["","","",""];
+		
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
 		}
