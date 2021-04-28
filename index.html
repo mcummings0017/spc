@@ -12,19 +12,20 @@
 </nav>
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-md-4 order-md-2 mb-4" id="sidebar">
+		<div class="col-md-4 order-md-2 mb-4 py-md-3" id="sidebar">
 			<h2 id="example">Get Started</h2>
 			<div class="bd-example">
 				<div class="form-floating mb-3">
-					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
-					<label for="plaintext">16-bit plaintext</label>
+					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="0110111111101101">
+					<label for="plaintext">16-bit Plaintext or Ciphertext</label>
 				</div>
 				<div class="form-floating mb-3">
 					<input type="text" class="form-control" id="key" name="key" maxlength="20" value="10110001110111110101">
 					<label for="key">20-bit key</label>
 				</div>
 				<div>
-					<button type ="button" class="submit" value="Generate Keystream" onclick="generateKey()">Generate Keystream</button>
+					<button type ="button" class="submit" value="Encrypt" id="btnEncrypt" onclick="encrypt()">Encyrpt</button>
+					<button type ="button" class="submit" value="Decrypt" id="btnDecrypt" onclick="decrypt()">Decrypt</button>
 					<button type ="button" value="Clear" onclick="reset()">Reset All</button>
 				</div>
 				<br />
@@ -57,8 +58,10 @@
 						<td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
 					</tr>
 					</table>
+					<br />
 				</div>
 		</div>
+		<!-- class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" -->
 		<main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content">
 			<div class="container">
 				<div class="row">
@@ -79,19 +82,20 @@
 </div>
 
 <script>
-	var key1;
-	var key2;
-	var key3;
+	let key1;
+	let key2;
+	let key3;
 	
-	var round1 = ["","","",""];
-	var round2 = ["","","",""];
-	var round3 = ["","","",""];
+	let round1 = ["","","",""];
+	let round2 = ["","","",""];
+	let round3 = ["","","",""];
 	
-	var rowRegex = /.{1,4}/g;
-	var pt = document.getElementById("plaintext").value;
+	const rowRegex = /.{1,4}/g;
+	let pt;
 	
 	function generateKey() {
-		var k = document.getElementById("key").value;
+		pt = document.getElementById("plaintext").value;
+		let k = document.getElementById("key").value;
 		
 		if (pt.length != 16) {
 			return alert("Invalid plaintext length 16 bits required!");
@@ -112,19 +116,16 @@
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
 		}
-		if (document.contains(document.getElementById("btnEncrypt"))) {
-			document.getElementById("btnEncrypt").remove();
-		}
 		if (document.contains(document.getElementById("divEncrypt"))) {
 			document.getElementById("divEncrypt").remove()
 		}
 
 
-		var divKey = document.createElement("div");
+		let divKey = document.createElement("div");
 		divKey.setAttribute("id", "divKey");
 
 
-		var k1 = keygen(divKey, k, "0001");
+		let k1 = keygen(divKey, k, "0001");
 		key1 = k1.substring(0, 16)
 		divKey.appendChild(document.createTextNode("Key 1 is: " + k1));
 		divKey.appendChild(document.createElement("br"));
@@ -132,7 +133,7 @@
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createElement("br"));
 		
-		var k2 = keygen(divKey, k1, "0010");
+		let k2 = keygen(divKey, k1, "0010");
 		key2 = k2.substring(0, 16);
 		divKey.appendChild(document.createTextNode("Key 2 is: " + k2));
 		divKey.appendChild(document.createElement("br"));
@@ -140,21 +141,15 @@
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createElement("br"));
 		
-		var k3 = keygen(divKey, k2, "0011");
+		let k3 = keygen(divKey, k2, "0011");
 		key3 = k3.substring(0, 16);
 		divKey.appendChild(document.createTextNode("Key 3 is: " + k3));
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createTextNode("First 16 bits Key 3 is: " + key3));
 		divKey.appendChild(document.createElement("br"));
 		divKey.appendChild(document.createElement("br"));
-
-		var e = document.createElement("BUTTON");
-		e.appendChild(document.createTextNode("Encrypt"));
-		e.setAttribute("id", "btnEncrypt");
-		e.onclick = function() {encrypt()};
-		document.getElementById("sidebar").appendChild(e);
 		
-		var element = document.getElementById("div1");
+		let element = document.getElementById("div1");
 		element.appendChild(divKey);
 
 	}
@@ -170,20 +165,20 @@
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 2 user supplied key rotated left 17 bits
-		var r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
+		let r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
 		printRow(divKey, r2.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 3 substitue nibble on the left using the s-box
-		var leftNibble = r2.substring(0,4);
-		var r3 = _sbox(leftNibble);
+		let leftNibble = r2.substring(0,4);
+		let r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
 		printRow(divKey, r3.match(rowRegex));
 		divKey.appendChild(document.createElement("br"));
 		
 		//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
-		var r4 = r3.substring(0,12);
-		var nibble4 = r3.substring(12,16);
+		let r4 = r3.substring(0,12);
+		let nibble4 = r3.substring(12,16);
 		r4 += _xor(nibble4,round);
 		r4 += r3.substring(16, r3.length);
 		printRow(divKey, r4.match(rowRegex));
@@ -193,42 +188,47 @@
 		return r4;
 	}
 	
-	function encrypt() {		
+	function encrypt() {
+		document.getElementById("btnEncrypt").disabled = true;
+		document.getElementById("btnDecrypt").disabled = true;
+		generateKey();
+		
 		if (document.contains(document.getElementById("divEncrypt"))) {
 			document.getElementById("divEncrypt").remove();
 		}
 		
-		var divEncrypt = document.createElement("div");
+		let divEncrypt = document.createElement("div");
 		divEncrypt.setAttribute("id", "divEncrypt");
 		document.getElementById("div2").appendChild(divEncrypt);
 		
 		//print plaintext and break
+		var txt = document.createElement("h5");
+		txt.innerText = "Encrypt:";
+		divEncrypt.appendChild(txt);
 		divEncrypt.appendChild(document.createTextNode("Plaintext: " + pt));
 		divEncrypt.appendChild(document.createElement("br"));
 		divEncrypt.appendChild(document.createElement("br"));
 		
 		//generate table to store data
-		var tbl = document.createElement("table");
+		let tbl = document.createElement("table");
 		tbl.setAttribute("id","encryptTbl");
 		tbl.setAttribute("class","table table-sm table-striped table-dark");
-		var tblBody = document.createElement("tbody");
+		let tblBody = document.createElement("tbody");
 		tblBody.setAttribute("id", "encryptTbl-body");
 		tbl.append(tblBody);
 		
 		divEncrypt.appendChild(tbl);
 
-		var row = document.createElement("tr");
+		let row = document.createElement("tr");
 		row.setAttribute("id", "row_round1");
 		
-		var first = document.createElement("td");
+		let first = document.createElement("td");
 		first.innerText = "Round 1";
 		row.append(first);
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
 		round1_Step1();
-		
-		document.getElementById("btnEncrypt").disabled = true;
 	}
 	
 	//Round 1
@@ -242,11 +242,10 @@
 		printTblRow("round1_row2", "K1", key1.match(rowRegex), round1_Step3);
 	}
 	
-	//TODO: functions for encryption
 	//function for xor key1 with k1, pretty print result, delete/generate next button
 	function round1_Step3() {
-		var splitpt = pt.match(rowRegex);
-		var splitk1 = key1.match(rowRegex);
+		let splitpt = pt.match(rowRegex);
+		let splitk1 = key1.match(rowRegex);
 		round1[0] = _xor(splitpt[0],splitk1[0]);
 		round1[1] = _xor(splitpt[1],splitk1[1]);
 		round1[2] = _xor(splitpt[2],splitk1[2]);
@@ -267,7 +266,7 @@
 	
 	//function for permutate key against permutation, pretty print result, delete/generate next button, record round1 result
 	function round1_Step5() {
-		var tmpRound1 = round1[0] + round1[1] + round1[2] + round1[3];
+		let tmpRound1 = round1[0] + round1[1] + round1[2] + round1[3];
 		tmpRound1 = _permutation(tmpRound1);
 		round1 = tmpRound1.match(rowRegex);
 		round2 = round1;
@@ -277,10 +276,10 @@
 	//Round 2
 	//function for pretty print round2, delete/generate next button
 	function round2_Step1() {
-		var row = document.createElement("tr");
+		let row = document.createElement("tr");
 		row.setAttribute("id", "row_round2");
 		
-		var first = document.createElement("td");
+		let first = document.createElement("td");
 		first.innerText = "Round 2";
 		row.append(first);
 		
@@ -296,7 +295,7 @@
 	
 	//function for xor round2 with k2, pretty print result, delete/generate next button
 	function round2_Step3() {
-		var splitk2 = key2.match(rowRegex);
+		let splitk2 = key2.match(rowRegex);
 		round2[0] = _xor(round2[0],splitk2[0]);
 		round2[1] = _xor(round2[1],splitk2[1]);
 		round2[2] = _xor(round2[2],splitk2[2]);
@@ -317,7 +316,7 @@
 	
 	//function for permutate result, pretty print result, delete/generate next button, record round 2 result
 	function round2_Step5() {
-		var tmpRound2 = round2[0] + round2[1] + round2[2] + round2[3];
+		let tmpRound2 = round2[0] + round2[1] + round2[2] + round2[3];
 		tmpRound2 = _permutation(tmpRound2);
 		round2 = tmpRound2.match(rowRegex);
 		round3 = round2;
@@ -327,10 +326,10 @@
 	//Round 3
 	//function for pretty print round2, generate next button
 	function round3_Step1() {
-		var row = document.createElement("tr");
+		let row = document.createElement("tr");
 		row.setAttribute("id", "row_round3");
 		
-		var first = document.createElement("td");
+		let first = document.createElement("td");
 		first.innerText = "Round 3";
 		row.append(first);
 		
@@ -346,7 +345,7 @@
 	
 	//function for xor key3 with round2, pretty print round3 result
 	function round3_Step3() {
-		var splitk3 = key3.match(rowRegex);
+		let splitk3 = key3.match(rowRegex);
 		round3[0] = _xor(round3[0],splitk3[0]);
 		round3[1] = _xor(round3[1],splitk3[1]);
 		round3[2] = _xor(round3[2],splitk3[2]);
@@ -358,16 +357,309 @@
 			document.getElementById("step").remove()
 		}
 		
-		var divEncrypt = document.getElementById("divEncrypt");
+		let divEncrypt = document.getElementById("divEncrypt");
 		divEncrypt.appendChild(document.createTextNode("Ciphertext: " + round3.join("")));
 	}
+	
+	//function for decryption
+	function decrypt() {
+		document.getElementById("btnEncrypt").disabled = true;
+		document.getElementById("btnDecrypt").disabled = true;
+		pt = document.getElementById("plaintext").value;
+		
+		if (pt.length != 16) {
+			return alert("Invalid plaintext length 16 bits required!");
+		}
+
+		if (!(/^([10]{16,})$/.test(pt))) {
+			return alert("Invalid plaintext please only use 1s and 0s!");
+		}
+
+		if (document.contains(document.getElementById("divKey"))) {
+			document.getElementById("divKey").remove();
+		}
+		if (document.contains(document.getElementById("divEncrypt"))) {
+			document.getElementById("divEncrypt").remove()
+		}
+		
+		var sb = document.getElementById("sidebar");
+		
+		if (document.contains(document.getElementById("divDecryptSidebar"))) {
+			document.getElementById("divDecryptSidebar").remove()
+		}
+		
+		let divDecryptSidebar = document.createElement("div");
+		divDecryptSidebar.setAttribute("id", "divDecryptSidebar");
+		document.getElementById("sidebar").appendChild(divDecryptSidebar);
+		
+		divDecryptSidebar.appendChild(document.createTextNode("Please enter 16 bit Key 1, Key 2 and Key 3"));
+		divDecryptSidebar.appendChild(document.createElement("br"));
+		divDecryptSidebar.appendChild(document.createTextNode("(decryption starts with key 3)"));
+		//create 3 text fields for key
+		let div = document.createElement("div");
+		div.setAttribute("class", "form-floating mb-3");
+		
+		let input = document.createElement("input");
+		input.setAttribute("type", "text");
+		input.setAttribute("class", "form-control");
+		input.setAttribute("id", "dk1");
+		input.setAttribute("maxlength", "16");
+		let label = document.createElement("label");
+		label.innerText = "Key 1";
+		div.appendChild(input);
+		div.appendChild(label);
+		divDecryptSidebar.append(div);
+		
+		let div2 = document.createElement("div");
+		div2.setAttribute("class", "form-floating mb-3");
+		
+		let input2 = document.createElement("input");
+		input2.setAttribute("type", "text");
+		input2.setAttribute("class", "form-control");
+		input2.setAttribute("id", "dk2");
+		input2.setAttribute("maxlength", "16");
+		let label2 = document.createElement("label");
+		label2.innerText = "Key 2";
+		div2.appendChild(input2);
+		div2.appendChild(label2);
+		divDecryptSidebar.append(div2);
+		
+		let div3 = document.createElement("div");
+		div3.setAttribute("class", "form-floating mb-3");
+		
+		let input3 = document.createElement("input");
+		input3.setAttribute("type", "text");
+		input3.setAttribute("class", "form-control");
+		input3.setAttribute("id", "dk3");
+		input3.setAttribute("maxlength", "16");
+		let label3 = document.createElement("label");
+		label3.innerText = "Key 3";
+		div3.appendChild(input3);
+		div3.appendChild(label3);
+		
+		divDecryptSidebar.append(div3);
+		
+		//create button for starting decryption
+		let btnGen = document.createElement("button");
+		btnGen.setAttribute("type", "button");
+		btnGen.setAttribute("class", "submit");
+		btnGen.setAttribute("value", "Decrypt");
+		btnGen.setAttribute("id", "btnGen");
+		btnGen.setAttribute("onclick", "decryptGen()");
+		btnGen.innerText = "Decrypt";
+		
+		divDecryptSidebar.append(btnGen);
+	}
+	
+	//function for printing ciphertext, generate next button
+	function decryptGen() {
+		//check if keys are correct if not return
+		key1 = document.getElementById("dk1").value;
+		key2 = document.getElementById("dk2").value;
+		key3 = document.getElementById("dk3").value;
+		
+		if (key1.length != 16) {
+			return alert("Invalid Key 1 length 16 bits required!");
+		}
+
+		if (!(/^([10]{16,})$/.test(key1))) {
+			return alert("Invalid Key 1 please only use 1s and 0s!");
+		}
+		if (key2.length != 16) {
+			return alert("Invalid Key 2 length 16 bits required!");
+		}
+
+		if (!(/^([10]{16,})$/.test(key2))) {
+			return alert("Invalid Key 2 please only use 1s and 0s!");
+		}
+		if (key3.length != 16) {
+			return alert("Invalid Key 3 length 16 bits required!");
+		}
+
+		if (!(/^([10]{16,})$/.test(key3))) {
+			return alert("Invalid Key 3 please only use 1s and 0s!");
+		}
+		
+		document.getElementById("btnGen").disabled = true;
+		
+		if (document.contains(document.getElementById("divEncrypt"))) {
+			document.getElementById("divEncrypt").remove();
+		}
+		
+		let divEncrypt = document.createElement("div");
+		divEncrypt.setAttribute("id", "divEncrypt");
+		document.getElementById("div2").appendChild(divEncrypt);
+		
+		//print plaintext and break
+		var txt = document.createElement("h5");
+		txt.innerText = "Decrypt:";
+		divEncrypt.appendChild(txt);
+		divEncrypt.appendChild(document.createTextNode("Ciphertext: " + pt));
+		divEncrypt.appendChild(document.createElement("br"));
+		divEncrypt.appendChild(document.createElement("br"));
+		
+		//generate table to store data
+		let tbl = document.createElement("table");
+		tbl.setAttribute("id","encryptTbl");
+		tbl.setAttribute("class","table table-sm table-striped table-dark");
+		let tblBody = document.createElement("tbody");
+		tblBody.setAttribute("id", "encryptTbl-body");
+		tbl.append(tblBody);
+		
+		divEncrypt.appendChild(tbl);
+		
+		decrypt_R3_S1();
+	}
+	
+	//round 3
+	function decrypt_R3_S1() {
+		let row = document.createElement("tr");
+		row.setAttribute("id", "row_round1");
+		
+		let first = document.createElement("td");
+		first.innerText = "Round 3";
+		row.append(first);
+		
+		document.getElementById("encryptTbl-body").append(row);
+		
+		printTblRow("round3_row1", "Ciphertext", pt.match(rowRegex), decrypt_R3_S2);
+	}
+	
+	//function for printing key3, generate next button
+	function decrypt_R3_S2() {
+		printTblRow("round3_row2", "K3", key3.match(rowRegex), decrypt_R3_S3);
+	}
+	
+	//function for xor ciphertext with key3, print result, generate next button
+	function decrypt_R3_S3() {
+		let splitpt = pt.match(rowRegex);
+		let splitk3 = key3.match(rowRegex);
+		round3[0] = _xor(splitpt[0],splitk3[0]);
+		round3[1] = _xor(splitpt[1],splitk3[1]);
+		round3[2] = _xor(splitpt[2],splitk3[2]);
+		round3[3] = _xor(splitpt[3],splitk3[3]);
+		
+		round2 = round3;
+		
+		printTblRow("round3_row3", "xor", round3, decrypt_R2_S1);
+	}
+	
+	//round 2
+	//function for printing round 2 and result, generate next button
+	function decrypt_R2_S1() {
+		let row = document.createElement("tr");
+		row.setAttribute("id", "row_round3");
+		
+		let first = document.createElement("td");
+		first.innerText = "Round 2";
+		row.append(first);
+		
+		document.getElementById("encryptTbl-body").append(row);
+		
+		printTblRow("round2_row1", "16-bit plaintext", round2, decrypt_R2_S2);
+	}
+	
+	//function for reverse permutation of result, print result, generate next button
+	function decrypt_R2_S2() {
+		let tmpRound2 = round2[0] + round2[1] + round2[2] + round2[3];
+		tmpRound2 = _permutation(tmpRound2);
+		round2 = tmpRound2.match(rowRegex);
+		
+		printTblRow("round2_row2", "permutation", round2, decrypt_R2_S3);
+	}
+	
+	//function for reverse sbox of result, print result, generate next button
+	function decrypt_R2_S3() {
+		round2[0] = _sboxrev(round2[0]);
+		round2[1] = _sboxrev(round2[1]);
+		round2[2] = _sboxrev(round2[2]);
+		round2[3] = _sboxrev(round2[3]);
+		
+		printTblRow("round2_row3", "sbox", round2, decrypt_R2_S4);
+	}
+	
+	//function for printing key2, generate next button
+	function decrypt_R2_S4() {
+		printTblRow("round2_row4", "K2", key2.match(rowRegex), decrypt_R2_S5);
+	}
+	
+	//function for xor result with key2, print result, generate next button
+	function decrypt_R2_S5() {
+		let splitk2 = key2.match(rowRegex);
+		round2[0] = _xor(round2[0],splitk2[0]);
+		round2[1] = _xor(round2[1],splitk2[1]);
+		round2[2] = _xor(round2[2],splitk2[2]);
+		round2[3] = _xor(round2[3],splitk2[3]);
+		
+		round1 = round2;
+		
+		printTblRow("round2_row5", "xor", round2, decrypt_R1_S1);
+	}
+	
+	//round 1
+	//function for printing round 1 and result, generate next button
+	function decrypt_R1_S1() {
+		let row = document.createElement("tr");
+		row.setAttribute("id", "row_round2");
+		
+		let first = document.createElement("td");
+		first.innerText = "Round 1";
+		row.append(first);
+		
+		document.getElementById("encryptTbl-body").append(row);
+		
+		printTblRow("round1_row1", "16-bit plaintext", round1, decrypt_R1_S2);
+	}
+	
+	//function for reverse permutation of result, print result, generate next button
+	function decrypt_R1_S2() {
+		let tmpRound1 = round1[0] + round1[1] + round1[2] + round1[3];
+		tmpRound1 = _permutation(tmpRound1);
+		round1 = tmpRound1.match(rowRegex);
+
+		printTblRow("round1_row2", "permutation", round1, decrypt_R1_S3);
+	}
+	
+	//function for reverse sbox of result, print result, generate next button
+	function decrypt_R1_S3() {
+		round1[0] = _sboxrev(round1[0]);
+		round1[1] = _sboxrev(round1[1]);
+		round1[2] = _sboxrev(round1[2]);
+		round1[3] = _sboxrev(round1[3]);
+		
+		printTblRow("round1_row3", "sbox", round1, decrypt_R1_S4);
+	}
+	
+	//function for printing key1, generate next button
+	function decrypt_R1_S4() {
+		printTblRow("round1_row4", "K1", key1.match(rowRegex), decrypt_R1_S5);
+	}
+	
+	//function for xor result with key1, print result, generate next button
+	function decrypt_R1_S5() {
+		let splitk1 = key1.match(rowRegex);
+		round1[0] = _xor(round1[0],splitk1[0]);
+		round1[1] = _xor(round1[1],splitk1[1]);
+		round1[2] = _xor(round1[2],splitk1[2]);
+		round1[3] = _xor(round1[3],splitk1[3]);
+		
+		printTblRow("round1_row5", "xor", round1, round1_Step4);
+		
+		if (document.contains(document.getElementById("step"))) {
+			document.getElementById("step").remove()
+		}
+		
+		let divEncrypt = document.getElementById("divEncrypt");
+		divEncrypt.appendChild(document.createTextNode("Plaintext: " + round1.join("")));
+	}
+	
 	
 	function end() {
 	
 	}
 	
 	function printRow(e, a) {
-		var t = "";
+		let t = "";
 		a.forEach(a => {t += a + "\xa0\xa0\xa0\xa0\xa0"});
 		e.appendChild(document.createTextNode(t));
 	}
@@ -377,24 +669,24 @@
 			document.getElementById("step").remove()
 		}
 		
-		var row = document.createElement("tr");
+		let row = document.createElement("tr");
 		row.setAttribute("id", row_attr);
 		
-		var first = document.createElement("td");
+		let first = document.createElement("td");
 		first.innerText = firstColumn;
 		row.append(first);
 		
 		for(i = 0; i < values.length; i++) {
-			var cell = document.createElement("td");
+			let cell = document.createElement("td");
 			cell.innerText = values[i];
 			row.append(cell);
 		}
 		
-		var btnStep = document.createElement("BUTTON");
+		let btnStep = document.createElement("BUTTON");
 		btnStep.appendChild(document.createTextNode("Step"));
 		btnStep.setAttribute("id", "step");
 		btnStep.onclick = function() {_func()};
-		var cell = document.createElement("td");
+		let cell = document.createElement("td");
 		cell.append(btnStep);
 		row.appendChild(cell);
 		
@@ -402,7 +694,7 @@
 	}
 	
 	function _xor(x,y) {
-		var t = "";
+		let t = "";
 		for (i = 0; i < x.length; i++) {
 			if (x[i] != y[i]) {
 				t += 1;
@@ -450,9 +742,46 @@
 		}
 	}
 	
+	function _sboxrev(nibble) {
+		switch (parseInt(nibble,2)) {
+			case 0:
+				return "0101";
+			case 1:
+				return "1110";
+			case 2:
+				return "1111";
+			case 3:
+				return "1000";
+			case 4:
+				return "1100";
+			case 5:
+				return "0001";
+			case 6:
+				return "0010";
+			case 7:
+				return "1101";
+			case 8:
+				return "1011";
+			case 9:
+				return "0100";
+			case 10:
+				return "0110";
+			case 11:
+				return "0011";
+			case 12:
+				return "0000";
+			case 13:
+				return "0111";
+			case 14:
+				return "1001";
+			case 15:
+				return "1010";
+		}
+	}
+	
 	function _permutation(x) {
-		var t = new Array(x.length);
-		var permutation = [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15];
+		let t = new Array(x.length);
+		let permutation = [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15];
 		for (i = 0; i < x.length; i++) {
 			t[permutation[i]] = x[i];
 		}
@@ -471,15 +800,20 @@
 		round2 = ["","","",""];
 		round3 = ["","","",""];
 		
+		pt = "";
+		
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
 		}
 		if (document.contains(document.getElementById("divEncrypt"))) {
 			document.getElementById("divEncrypt").remove();
 		}
-		if (document.contains(document.getElementById("btnEncrypt"))) {
-			document.getElementById("btnEncrypt").remove();
+		if (document.contains(document.getElementById("divDecryptSidebar"))) {
+			document.getElementById("divDecryptSidebar").remove();
 		}
+		
+		document.getElementById("btnEncrypt").disabled = false;
+		document.getElementById("btnDecrypt").disabled = false;
 	}
 </script>
 </body>
