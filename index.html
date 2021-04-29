@@ -1,85 +1,96 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
 <title>Simplified PRESENT Encoder</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <!-- CSS only -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 </head>
-<body>
-<nav class="navbar navbar-dark bg-dark">
-  <a class="navbar-brand" href="#">Simplified PRESENT Encoder</a>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-md-4 order-md-2 mb-4 py-md-3" id="sidebar">
-			<h2 id="example">Get Started</h2>
-			<div class="bd-example">
-				<div class="form-floating mb-3">
-					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
-					<label for="plaintext">16-bit Plaintext or Ciphertext</label>
+<body class="d-flex flex-column h-100">
+	<header>
+		<nav class="navbar navbar-dark bg-dark">
+		  <a class="navbar-brand" href="#">Simplified PRESENT Encoder</a>
+		</nav>
+	</header>
+	<main class="flex-shrink-0">
+	<div class="container-fluid d-flex h-100">
+		<div class="row">
+			<div class="col-md-4 order-md-2 mb-4 py-md-3" id="sidebar">
+				<h2 id="example">Get Started</h2>
+				<div class="bd-example">
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
+						<label for="plaintext">16-bit Plaintext or Ciphertext</label>
+					</div>
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="key" name="key" maxlength="20" value="10110001110111110101">
+						<label for="key">20-bit key</label>
+					</div>
+					<div>
+						<button type ="button" class="submit" value="Encrypt" id="btnEncrypt" onclick="generateKey()">Encyrpt</button>
+						<button type ="button" class="submit" value="Decrypt" id="btnDecrypt" onclick="decrypt()">Decrypt</button>
+						<button type ="button" value="Clear" onclick="reset()">Reset All</button>
+					</div>
+					<br />
 				</div>
-				<div class="form-floating mb-3">
-					<input type="text" class="form-control" id="key" name="key" maxlength="20" value="10110001110111110101">
-					<label for="key">20-bit key</label>
-				</div>
-				<div>
-					<button type ="button" class="submit" value="Encrypt" id="btnEncrypt" onclick="generateKey()">Encyrpt</button>
-					<button type ="button" class="submit" value="Decrypt" id="btnDecrypt" onclick="decrypt()">Decrypt</button>
-					<button type ="button" value="Clear" onclick="reset()">Reset All</button>
-				</div>
-				<br />
+					<div>
+						<table id="t_sbox" class="table table-striped">
+						<th>SBox</th>
+						<tr>
+							<td>Input</td>
+							<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+							<td>8</td><td>9</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td>
+						</tr>
+						<tr>
+							<td>Output</td>
+							<td>C</td><td>5</td><td>6</td><td>B</td><td>9</td><td>0</td><td>A</td><td>D</td>
+							<td>3</td><td>E</td><td>F</td><td>8</td><td>4</td><td>7</td><td>1</td><td>2</td>
+						</tr>
+						</table>
+						<br />
+						<table id="t_permutation" class="table table-striped">
+						<th>Permutation</th>
+						<tr>
+							<td>Input bit</td>
+							<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
+							<td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
+						</tr>
+						<tr>
+							<td>Output bit</td>
+							<td>0</td><td>4</td><td>8</td><td>12</td><td>1</td><td>5</td><td>9</td><td>13</td>
+							<td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
+						</tr>
+						</table>
+						<br />
+					</div>
 			</div>
-				<div>
-					<table id="t_sbox" class="table table-striped">
-					<th>SBox</th>
-					<tr>
-						<td>Input</td>
-						<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
-						<td>8</td><td>9</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td>
-					</tr>
-					<tr>
-						<td>Output</td>
-						<td>C</td><td>5</td><td>6</td><td>B</td><td>9</td><td>0</td><td>A</td><td>D</td>
-						<td>3</td><td>E</td><td>F</td><td>8</td><td>4</td><td>7</td><td>1</td><td>2</td>
-					</tr>
-					</table>
-					<br />
-					<table id="t_permutation" class="table table-striped">
-					<th>Permutation</th>
-					<tr>
-						<td>Input bit</td>
-						<td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td>
-						<td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
-					</tr>
-					<tr>
-						<td>Output bit</td>
-						<td>0</td><td>4</td><td>8</td><td>12</td><td>1</td><td>5</td><td>9</td><td>13</td>
-						<td>2</td><td>6</td><td>10</td><td>14</td><td>3</td><td>7</td><td>11</td><td>15</td>
-					</tr>
-					</table>
-					<br />
-				</div>
+			<div class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content">
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<h2>Generate Keystream</h2>
+							<div id="div1">
+							</div>
+						</div>
+						<div class="col">
+							<h2>Encipher Steps</h2>
+							<div id="div2">
+							</div>
+						</div>
+					</div>
+				  </div>
+			</div>
 		</div>
-		<!-- class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" -->
-		<main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content">
-			<div class="container">
-				<div class="row">
-					<div class="col">
-						<h2>Keystream</h2>
-						<div id="div1">
-						</div>
-					</div>
-					<div class="col">
-						<h2>Encipher Steps</h2>
-						<div id="div2">
-						</div>
-					</div>
-				</div>
-			  </div>
-		</main>
 	</div>
-</div>
+	</main>
+<footer class="footer mt-auto py-3 bg-light">
+	<div class="container">
+		<span class="text-muted">
+		Made by Michael Cummings - CSC483 Final Project 
+		<a href="https://github.com/mcummings0017/spc">Github Repo</a>
+		</span>
+	</div>
+</footer>
 
 <script>
 	let key1;
@@ -166,14 +177,14 @@
 	//row 2 user supplied key rotated left 17 bits
 	function key1_Step2() {
 		r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
-		printTblRow("k1Tbl-body", "key1_row2", "Rotate left 17 bits", r2.match(rowRegex), key1_Step3);
+		printTblRow("k1Tbl-body", "key1_row2", "Rotate", r2.match(rowRegex), key1_Step3);
 	}
 	//row 3 substitue nibble on the left using the s-box
 	function key1_Step3() {
 		let leftNibble = r2.substring(0,4);
 		r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
-		printTblRow("k1Tbl-body", "key1_row3", "sbox left nibble", r3.match(rowRegex), key1_Step4);
+		printTblRow("k1Tbl-body", "key1_row3", "sbox", r3.match(rowRegex), key1_Step4);
 	}
 	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
 	function key1_Step4() {
@@ -211,14 +222,14 @@
 	//row 2 user supplied key rotated left 17 bits
 	function key2_Step2() {
 		r2 = k1.substring(k1.length-3, k1.length) + k1.substring(0, 17)
-		printTblRow("k2Tbl-body", "key2_row2", "Rotate left 17 bits", r2.match(rowRegex), key2_Step3);
+		printTblRow("k2Tbl-body", "key2_row2", "Rotate", r2.match(rowRegex), key2_Step3);
 	}
 	//row 3 substitue nibble on the left using the s-box
 	function key2_Step3() {
 		let leftNibble = r2.substring(0,4);
 		r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
-		printTblRow("k2Tbl-body", "key2_row3", "sbox left nibble", r3.match(rowRegex), key2_Step4);
+		printTblRow("k2Tbl-body", "key2_row3", "sbox", r3.match(rowRegex), key2_Step4);
 	}
 	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
 	function key2_Step4() {
@@ -256,14 +267,14 @@
 	//row 2 user supplied key rotated left 17 bits
 	function key3_Step2() {
 		r2 = k2.substring(k2.length-3, k2.length) + k2.substring(0, 17)
-		printTblRow("k3Tbl-body", "key3_row2", "Rotate left 17 bits", r2.match(rowRegex), key3_Step3);
+		printTblRow("k3Tbl-body", "key3_row2", "Rotate", r2.match(rowRegex), key3_Step3);
 	}
 	//row 3 substitue nibble on the left using the s-box
 	function key3_Step3() {
 		let leftNibble = r2.substring(0,4);
 		r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
-		printTblRow("k3Tbl-body", "key3_row3", "sbox left nibble", r3.match(rowRegex), key3_Step4);
+		printTblRow("k3Tbl-body", "key3_row3", "sbox", r3.match(rowRegex), key3_Step4);
 	}
 	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
 	function key3_Step4() {
@@ -642,7 +653,7 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("encryptTbl-body", "round2_row1", "16-bit plaintext", round2, decrypt_R2_S2);
+		printTblRow("encryptTbl-body", "round2_row1", "Ciphertext", round2, decrypt_R2_S2);
 	}
 	
 	//function for reverse permutation of result, print result, generate next button
@@ -694,7 +705,7 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("encryptTbl-body", "round1_row1", "16-bit plaintext", round1, decrypt_R1_S2);
+		printTblRow("encryptTbl-body", "round1_row1", "Ciphertext", round1, decrypt_R1_S2);
 	}
 	
 	//function for reverse permutation of result, print result, generate next button
@@ -760,6 +771,7 @@
 		
 		let first = document.createElement("td");
 		first.innerText = firstColumn;
+		first.setAttribute("style", "min-width:100px");
 		row.append(first);
 		
 		for(i = 0; i < values.length; i++) {
