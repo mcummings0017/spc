@@ -16,7 +16,7 @@
 			<h2 id="example">Get Started</h2>
 			<div class="bd-example">
 				<div class="form-floating mb-3">
-					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="0110111111101101">
+					<input type="text" class="form-control" id="plaintext" name="plaintext" maxlength="16" value="1001111001100001">
 					<label for="plaintext">16-bit Plaintext or Ciphertext</label>
 				</div>
 				<div class="form-floating mb-3">
@@ -24,7 +24,7 @@
 					<label for="key">20-bit key</label>
 				</div>
 				<div>
-					<button type ="button" class="submit" value="Encrypt" id="btnEncrypt" onclick="encrypt()">Encyrpt</button>
+					<button type ="button" class="submit" value="Encrypt" id="btnEncrypt" onclick="generateKey()">Encyrpt</button>
 					<button type ="button" class="submit" value="Decrypt" id="btnDecrypt" onclick="decrypt()">Decrypt</button>
 					<button type ="button" value="Clear" onclick="reset()">Reset All</button>
 				</div>
@@ -86,16 +86,25 @@
 	let key2;
 	let key3;
 	
+	let k1;
+	let k2;
+	let k3
+	
+	let r2;
+	let r3;
+	let r4;
+	
 	let round1 = ["","","",""];
 	let round2 = ["","","",""];
 	let round3 = ["","","",""];
 	
 	const rowRegex = /.{1,4}/g;
 	let pt;
+	let k;
 	
 	function generateKey() {
 		pt = document.getElementById("plaintext").value;
-		let k = document.getElementById("key").value;
+		k = document.getElementById("key").value;
 		
 		if (pt.length != 16) {
 			return alert("Invalid plaintext length 16 bits required!");
@@ -119,80 +128,157 @@
 		if (document.contains(document.getElementById("divEncrypt"))) {
 			document.getElementById("divEncrypt").remove()
 		}
+		
+		document.getElementById("btnEncrypt").disabled = true;
+		document.getElementById("btnDecrypt").disabled = true;
 
-
+		//generate table to store keystream 1
 		let divKey = document.createElement("div");
 		divKey.setAttribute("id", "divKey");
-
-
-		let k1 = keygen(divKey, k, "0001");
-		key1 = k1.substring(0, 16)
-		divKey.appendChild(document.createTextNode("Key 1 is: " + k1));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createTextNode("First 16 bits Key 1 is: " + key1));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createElement("br"));
 		
-		let k2 = keygen(divKey, k1, "0010");
-		key2 = k2.substring(0, 16);
-		divKey.appendChild(document.createTextNode("Key 2 is: " + k2));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createTextNode("First 16 bits Key 2 is: " + key2));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createElement("br"));
+		let divKey1 = document.createElement("div");
+		divKey1.setAttribute("id", "divKey1");
 		
-		let k3 = keygen(divKey, k2, "0011");
-		key3 = k3.substring(0, 16);
-		divKey.appendChild(document.createTextNode("Key 3 is: " + k3));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createTextNode("First 16 bits Key 3 is: " + key3));
-		divKey.appendChild(document.createElement("br"));
-		divKey.appendChild(document.createElement("br"));
+		divKey.appendChild(divKey1);
 		
 		let element = document.getElementById("div1");
 		element.appendChild(divKey);
+		
+		divKey1.appendChild(document.createTextNode("Key: " + k));
+		
+		let tbl = document.createElement("table");
+		tbl.setAttribute("id","keystreamtbl");
+		tbl.setAttribute("class","table table-sm table-striped");
+		let tblBody = document.createElement("tbody");
+		tblBody.setAttribute("id", "k1Tbl-body");
+		tbl.append(tblBody);
+		
+		divKey1.appendChild(tbl);
 
+		key1_Step1();
 	}
 	
-	function keygen(divKey, k, round) {
-		//print user supplied key
-		divKey.appendChild(document.createTextNode("Key: " + k));
-		divKey.appendChild(document.createElement("br"));
-
-		//create table 
-		//row 1 user supplied key
-		printRow(divKey, k.match(rowRegex));
-		divKey.appendChild(document.createElement("br"));
-		
-		//row 2 user supplied key rotated left 17 bits
-		let r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
-		printRow(divKey, r2.match(rowRegex));
-		divKey.appendChild(document.createElement("br"));
-		
-		//row 3 substitue nibble on the left using the s-box
+	//Round 1
+	//row 1 user supplied key
+	function key1_Step1() {
+		printTblRow("k1Tbl-body", "key1_row1", "Key", k.match(rowRegex), key1_Step2);
+	}
+	//row 2 user supplied key rotated left 17 bits
+	function key1_Step2() {
+		r2 = k.substring(k.length-3, k.length) + k.substring(0, 17)
+		printTblRow("k1Tbl-body", "key1_row2", "Rotate left 17 bits", r2.match(rowRegex), key1_Step3);
+	}
+	//row 3 substitue nibble on the left using the s-box
+	function key1_Step3() {
 		let leftNibble = r2.substring(0,4);
-		let r3 = _sbox(leftNibble);
+		r3 = _sbox(leftNibble);
 		r3 += r2.substring(4, r2.length);
-		printRow(divKey, r3.match(rowRegex));
-		divKey.appendChild(document.createElement("br"));
-		
-		//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
-		let r4 = r3.substring(0,12);
+		printTblRow("k1Tbl-body", "key1_row3", "sbox left nibble", r3.match(rowRegex), key1_Step4);
+	}
+	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
+	function key1_Step4() {
+		r4 = r3.substring(0,12);
 		let nibble4 = r3.substring(12,16);
-		r4 += _xor(nibble4,round);
+		r4 += _xor(nibble4,"0001");
 		r4 += r3.substring(16, r3.length);
-		printRow(divKey, r4.match(rowRegex));
-		divKey.appendChild(document.createElement("br"));
+		k1 = r4;
+		key1 = k1.substring(0, 16)
+		printTblRow("k1Tbl-body", "key1_row4", "xor", ["","","","0001",""], key2_Step1);
+		printTblRow("k1Tbl-body", "key1_row5", "Result", r4.match(rowRegex), key2_Step1);
+	}
+	
+	//Round 2
+	//row 1 user supplied key
+	function key2_Step1() {
+		let divKey2 = document.createElement("div");
+		divKey2.setAttribute("id", "divKey2");
 		
-		//16 bits on the left for the round key
-		return r4;
+		document.getElementById("divKey").appendChild(divKey2);
+		
+		divKey2.appendChild(document.createTextNode("Key 1: " + key1));
+		
+		let tbl = document.createElement("table");
+		tbl.setAttribute("id","keystreamtbl");
+		tbl.setAttribute("class","table table-sm table-striped");
+		let tblBody = document.createElement("tbody");
+		tblBody.setAttribute("id", "k2Tbl-body");
+		tbl.append(tblBody);
+		
+		divKey2.appendChild(tbl);
+	
+		printTblRow("k2Tbl-body", "key2_row1", "Key", k1.match(rowRegex), key2_Step2);
+	}
+	//row 2 user supplied key rotated left 17 bits
+	function key2_Step2() {
+		r2 = k1.substring(k1.length-3, k1.length) + k1.substring(0, 17)
+		printTblRow("k2Tbl-body", "key2_row2", "Rotate left 17 bits", r2.match(rowRegex), key2_Step3);
+	}
+	//row 3 substitue nibble on the left using the s-box
+	function key2_Step3() {
+		let leftNibble = r2.substring(0,4);
+		r3 = _sbox(leftNibble);
+		r3 += r2.substring(4, r2.length);
+		printTblRow("k2Tbl-body", "key2_row3", "sbox left nibble", r3.match(rowRegex), key2_Step4);
+	}
+	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
+	function key2_Step4() {
+		r4 = r3.substring(0,12);
+		let nibble4 = r3.substring(12,16);
+		r4 += _xor(nibble4,"0010");
+		r4 += r3.substring(16, r3.length);
+		k2 = r4;
+		key2 = k2.substring(0, 16);
+		printTblRow("k2Tbl-body", "key2_row4", "xor", ["","","","0010",""], key3_Step1);
+		printTblRow("k2Tbl-body", "key2_row5", "Result", r4.match(rowRegex), key3_Step1);
+	}
+	
+	//Round 3
+	//row 1 user supplied key
+	function key3_Step1() {
+		let divKey2 = document.createElement("div");
+		divKey2.setAttribute("id", "divKey3");
+		
+		document.getElementById("divKey").appendChild(divKey2);
+		
+		divKey2.appendChild(document.createTextNode("Key 2: " + key2));
+		
+		let tbl = document.createElement("table");
+		tbl.setAttribute("id","keystreamtbl");
+		tbl.setAttribute("class","table table-sm table-striped");
+		let tblBody = document.createElement("tbody");
+		tblBody.setAttribute("id", "k3Tbl-body");
+		tbl.append(tblBody);
+		
+		divKey2.appendChild(tbl);
+		
+		printTblRow("k3Tbl-body", "key3_row1", "Key", k2.match(rowRegex), key3_Step2);
+	}
+	//row 2 user supplied key rotated left 17 bits
+	function key3_Step2() {
+		r2 = k2.substring(k2.length-3, k2.length) + k2.substring(0, 17)
+		printTblRow("k3Tbl-body", "key3_row2", "Rotate left 17 bits", r2.match(rowRegex), key3_Step3);
+	}
+	//row 3 substitue nibble on the left using the s-box
+	function key3_Step3() {
+		let leftNibble = r2.substring(0,4);
+		r3 = _sbox(leftNibble);
+		r3 += r2.substring(4, r2.length);
+		printTblRow("k3Tbl-body", "key3_row3", "sbox left nibble", r3.match(rowRegex), key3_Step4);
+	}
+	//row 4 xor round counter (1, 2, or 3) with the second nibble from the right
+	function key3_Step4() {
+		r4 = r3.substring(0,12);
+		let nibble4 = r3.substring(12,16);
+		r4 += _xor(nibble4,"0011");
+		r4 += r3.substring(16, r3.length);
+		k3 = r4;
+		key3 = k3.substring(0, 16);
+		printTblRow("k3Tbl-body", "key3_row4", "xor", ["","","","0011",""], encrypt);
+		printTblRow("k3Tbl-body", "key3_row5", "Result", r4.match(rowRegex), encrypt);
 	}
 	
 	function encrypt() {
-		document.getElementById("btnEncrypt").disabled = true;
-		document.getElementById("btnDecrypt").disabled = true;
-		generateKey();
-		
+		document.getElementById("divKey3").appendChild(document.createTextNode("Key 3: " + key3));
 		if (document.contains(document.getElementById("divEncrypt"))) {
 			document.getElementById("divEncrypt").remove();
 		}
@@ -234,12 +320,12 @@
 	//Round 1
 	//function for pretty print plaintext, generate next button
 	function round1_Step1() {
-		printTblRow("round1_row1", "16-bit plaintext", pt.match(rowRegex), round1_Step2);
+		printTblRow("encryptTbl-body", "round1_row1", "16-bit plaintext", pt.match(rowRegex), round1_Step2);
 	}
 	
 	//function for pretty print key1, delete/generate next button
 	function round1_Step2() {
-		printTblRow("round1_row2", "K1", key1.match(rowRegex), round1_Step3);
+		printTblRow("encryptTbl-body", "round1_row2", "K1", key1.match(rowRegex), round1_Step3);
 	}
 	
 	//function for xor key1 with k1, pretty print result, delete/generate next button
@@ -251,7 +337,7 @@
 		round1[2] = _xor(splitpt[2],splitk1[2]);
 		round1[3] = _xor(splitpt[3],splitk1[3]);
 		
-		printTblRow("round1_row3", "xor", round1, round1_Step4);
+		printTblRow("encryptTbl-body", "round1_row3", "xor", round1, round1_Step4);
 	}
 	
 	//function for sbox with result, pretty print result, delete/generate next button
@@ -261,7 +347,7 @@
 		round1[2] = _sbox(round1[2]);
 		round1[3] = _sbox(round1[3]);
 		
-		printTblRow("round1_row4", "sbox", round1, round1_Step5);
+		printTblRow("encryptTbl-body", "round1_row4", "sbox", round1, round1_Step5);
 	}
 	
 	//function for permutate key against permutation, pretty print result, delete/generate next button, record round1 result
@@ -270,7 +356,7 @@
 		tmpRound1 = _permutation(tmpRound1);
 		round1 = tmpRound1.match(rowRegex);
 		round2 = round1;
-		printTblRow("round1_row5", "permutation", round1, round2_Step1);
+		printTblRow("encryptTbl-body", "round1_row5", "permutation", round1, round2_Step1);
 	}
 	
 	//Round 2
@@ -285,12 +371,12 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("round2_row1", "16-bit plaintext", round2, round2_Step2);
+		printTblRow("encryptTbl-body", "round2_row1", "16-bit plaintext", round2, round2_Step2);
 	}
 	
 	//pretty print k2, delete/generate next button
 	function round2_Step2() {
-		printTblRow("round2_row2", "K2", key2.match(rowRegex), round2_Step3);
+		printTblRow("encryptTbl-body", "round2_row2", "K2", key2.match(rowRegex), round2_Step3);
 	}
 	
 	//function for xor round2 with k2, pretty print result, delete/generate next button
@@ -301,7 +387,7 @@
 		round2[2] = _xor(round2[2],splitk2[2]);
 		round2[3] = _xor(round2[3],splitk2[3]);
 		
-		printTblRow("round2_row3", "xor", round2, round2_Step4);
+		printTblRow("encryptTbl-body", "round2_row3", "xor", round2, round2_Step4);
 	}
 	
 	//function for sbox with result, pretty print result, delete/generate next button
@@ -311,7 +397,7 @@
 		round2[2] = _sbox(round2[2]);
 		round2[3] = _sbox(round2[3]);
 		
-		printTblRow("round2_row4", "sbox", round2, round2_Step5);
+		printTblRow("encryptTbl-body", "round2_row4", "sbox", round2, round2_Step5);
 	}
 	
 	//function for permutate result, pretty print result, delete/generate next button, record round 2 result
@@ -320,7 +406,7 @@
 		tmpRound2 = _permutation(tmpRound2);
 		round2 = tmpRound2.match(rowRegex);
 		round3 = round2;
-		printTblRow("round2_row5", "permutation", round2, round3_Step1);
+		printTblRow("encryptTbl-body", "round2_row5", "permutation", round2, round3_Step1);
 	}
 	
 	//Round 3
@@ -335,12 +421,12 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("round3_row1", "16-bit plaintext", round3, round3_Step2);
+		printTblRow("encryptTbl-body", "round3_row1", "16-bit plaintext", round3, round3_Step2);
 	}
 	
 	//pretty print k3, generate next button
 	function round3_Step2() {
-		printTblRow("round3_row2", "K3", key3.match(rowRegex), round3_Step3);
+		printTblRow("encryptTbl-body", "round3_row2", "K3", key3.match(rowRegex), round3_Step3);
 	}
 	
 	//function for xor key3 with round2, pretty print round3 result
@@ -351,7 +437,7 @@
 		round3[2] = _xor(round3[2],splitk3[2]);
 		round3[3] = _xor(round3[3],splitk3[3]);
 		
-		printTblRow("round3_row3", "xor", round3, end);
+		printTblRow("encryptTbl-body", "round3_row3", "xor", round3, end);
 		
 		if (document.contains(document.getElementById("step"))) {
 			document.getElementById("step").remove()
@@ -522,12 +608,12 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("round3_row1", "Ciphertext", pt.match(rowRegex), decrypt_R3_S2);
+		printTblRow("encryptTbl-body", "round3_row1", "Ciphertext", pt.match(rowRegex), decrypt_R3_S2);
 	}
 	
 	//function for printing key3, generate next button
 	function decrypt_R3_S2() {
-		printTblRow("round3_row2", "K3", key3.match(rowRegex), decrypt_R3_S3);
+		printTblRow("encryptTbl-body", "round3_row2", "K3", key3.match(rowRegex), decrypt_R3_S3);
 	}
 	
 	//function for xor ciphertext with key3, print result, generate next button
@@ -541,7 +627,7 @@
 		
 		round2 = round3;
 		
-		printTblRow("round3_row3", "xor", round3, decrypt_R2_S1);
+		printTblRow("encryptTbl-body", "round3_row3", "xor", round3, decrypt_R2_S1);
 	}
 	
 	//round 2
@@ -556,7 +642,7 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("round2_row1", "16-bit plaintext", round2, decrypt_R2_S2);
+		printTblRow("encryptTbl-body", "round2_row1", "16-bit plaintext", round2, decrypt_R2_S2);
 	}
 	
 	//function for reverse permutation of result, print result, generate next button
@@ -565,7 +651,7 @@
 		tmpRound2 = _permutation(tmpRound2);
 		round2 = tmpRound2.match(rowRegex);
 		
-		printTblRow("round2_row2", "permutation", round2, decrypt_R2_S3);
+		printTblRow("encryptTbl-body", "round2_row2", "permutation", round2, decrypt_R2_S3);
 	}
 	
 	//function for reverse sbox of result, print result, generate next button
@@ -575,12 +661,12 @@
 		round2[2] = _sboxrev(round2[2]);
 		round2[3] = _sboxrev(round2[3]);
 		
-		printTblRow("round2_row3", "sbox", round2, decrypt_R2_S4);
+		printTblRow("encryptTbl-body", "round2_row3", "sbox", round2, decrypt_R2_S4);
 	}
 	
 	//function for printing key2, generate next button
 	function decrypt_R2_S4() {
-		printTblRow("round2_row4", "K2", key2.match(rowRegex), decrypt_R2_S5);
+		printTblRow("encryptTbl-body", "round2_row4", "K2", key2.match(rowRegex), decrypt_R2_S5);
 	}
 	
 	//function for xor result with key2, print result, generate next button
@@ -593,7 +679,7 @@
 		
 		round1 = round2;
 		
-		printTblRow("round2_row5", "xor", round2, decrypt_R1_S1);
+		printTblRow("encryptTbl-body", "round2_row5", "xor", round2, decrypt_R1_S1);
 	}
 	
 	//round 1
@@ -608,7 +694,7 @@
 		
 		document.getElementById("encryptTbl-body").append(row);
 		
-		printTblRow("round1_row1", "16-bit plaintext", round1, decrypt_R1_S2);
+		printTblRow("encryptTbl-body", "round1_row1", "16-bit plaintext", round1, decrypt_R1_S2);
 	}
 	
 	//function for reverse permutation of result, print result, generate next button
@@ -617,7 +703,7 @@
 		tmpRound1 = _permutation(tmpRound1);
 		round1 = tmpRound1.match(rowRegex);
 
-		printTblRow("round1_row2", "permutation", round1, decrypt_R1_S3);
+		printTblRow("encryptTbl-body", "round1_row2", "permutation", round1, decrypt_R1_S3);
 	}
 	
 	//function for reverse sbox of result, print result, generate next button
@@ -627,12 +713,12 @@
 		round1[2] = _sboxrev(round1[2]);
 		round1[3] = _sboxrev(round1[3]);
 		
-		printTblRow("round1_row3", "sbox", round1, decrypt_R1_S4);
+		printTblRow("encryptTbl-body", "round1_row3", "sbox", round1, decrypt_R1_S4);
 	}
 	
 	//function for printing key1, generate next button
 	function decrypt_R1_S4() {
-		printTblRow("round1_row4", "K1", key1.match(rowRegex), decrypt_R1_S5);
+		printTblRow("encryptTbl-body", "round1_row4", "K1", key1.match(rowRegex), decrypt_R1_S5);
 	}
 	
 	//function for xor result with key1, print result, generate next button
@@ -643,7 +729,7 @@
 		round1[2] = _xor(round1[2],splitk1[2]);
 		round1[3] = _xor(round1[3],splitk1[3]);
 		
-		printTblRow("round1_row5", "xor", round1, round1_Step4);
+		printTblRow("encryptTbl-body", "round1_row5", "xor", round1, round1_Step4);
 		
 		if (document.contains(document.getElementById("step"))) {
 			document.getElementById("step").remove()
@@ -664,7 +750,7 @@
 		e.appendChild(document.createTextNode(t));
 	}
 
-	function printTblRow(row_attr, firstColumn, values, _func) {
+	function printTblRow(tbody, row_attr, firstColumn, values, _func) {
 		if (document.contains(document.getElementById("step"))) {
 			document.getElementById("step").remove()
 		}
@@ -690,7 +776,7 @@
 		cell.append(btnStep);
 		row.appendChild(cell);
 		
-		document.getElementById("encryptTbl-body").append(row);
+		document.getElementById(tbody).append(row);
 	}
 	
 	function _xor(x,y) {
@@ -796,11 +882,20 @@
 		key2 = "";
 		key3 = "";
 		
+		k1 = "";
+		k2 = "";
+		k3 = "";
+	
+		r2 = "";
+		r3 = "";
+		r4 = "";
+		
 		round1 = ["","","",""];
 		round2 = ["","","",""];
 		round3 = ["","","",""];
 		
 		pt = "";
+		k = "";
 		
 		if (document.contains(document.getElementById("divKey"))) {
 			document.getElementById("divKey").remove();
