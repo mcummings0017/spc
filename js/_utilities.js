@@ -1,22 +1,22 @@
-	let key1;
-	let key2;
-	let key3;
+	var key1;
+	var key2;
+	var key3;
 	
-	let k1;
-	let k2;
-	let k3
+	var k1;
+	var k2;
+	var k3
 	
-	let r2;
-	let r3;
-	let r4;
+	var r2;
+	var r3;
+	var r4;
 	
-	let round1 = ["","","",""];
-	let round2 = ["","","",""];
-	let round3 = ["","","",""];
+	var round1 = ["","","",""];
+	var round2 = ["","","",""];
+	var round3 = ["","","",""];
 	
-	const rowRegex = /.{1,4}/g;
-	let pt;
-	let k;
+	var rowRegex = /.{1,4}/g;
+	var pt;
+	var k;
 	
 	function end() {
 	
