@@ -1,7 +1,5 @@
 	//function for decryption
 	function decrypt() {
-		document.getElementById("btnEncrypt").disabled = true;
-		document.getElementById("btnDecrypt").disabled = true;
 		pt = document.getElementById("plaintext").value;
 		
 		if (pt.length != 16) {
@@ -24,6 +22,11 @@
 		if (document.contains(document.getElementById("divDecryptSidebar"))) {
 			document.getElementById("divDecryptSidebar").remove()
 		}
+		
+		document.getElementById("btnEncrypt").disabled = true;
+		document.getElementById("btnDecrypt").disabled = true;
+		document.getElementById("plaintext").disabled = true;
+		document.getElementById("key").disabled = true;
 		
 		let divDecryptSidebar = document.createElement("div");
 		divDecryptSidebar.setAttribute("id", "divDecryptSidebar");

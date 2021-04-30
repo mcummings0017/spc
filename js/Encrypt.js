@@ -27,6 +27,8 @@
 		
 		document.getElementById("btnEncrypt").disabled = true;
 		document.getElementById("btnDecrypt").disabled = true;
+		document.getElementById("plaintext").disabled = true;
+		document.getElementById("key").disabled = true;
 
 		//generate table to store keystream 1
 		let divKey = document.createElement("div");

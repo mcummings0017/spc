@@ -168,4 +168,6 @@
 		
 		document.getElementById("btnEncrypt").disabled = false;
 		document.getElementById("btnDecrypt").disabled = false;
+		document.getElementById("plaintext").disabled = false;
+		document.getElementById("key").disabled = false;
 	}
