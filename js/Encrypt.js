@@ -1,4 +1,3 @@
-	
 	function generateKey() {
 		pt = document.getElementById("plaintext").value;
 		k = document.getElementById("key").value;
