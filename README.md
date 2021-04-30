@@ -1,2 +1,3 @@
-Simplified PRESENT Cryptography
--This program was designed to encrypt and decrypt the simplified PRESENT cipher.
+## Simplified PRESENT Crpytography
+
+This program was designed to encrypt and decrypt the simplified PRESENT cipher.
