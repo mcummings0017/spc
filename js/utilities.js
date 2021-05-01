@@ -134,8 +134,8 @@
 	}
 	
 	function reset() {
-		//document.getElementById("plaintext").value = "";
-		//document.getElementById("key").value = "";
+		document.getElementById("plaintext").value = "";
+		document.getElementById("key").value = "";
 		
 		key1 = "";
 		key2 = "";
